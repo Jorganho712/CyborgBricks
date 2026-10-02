@@ -1,11 +1,351 @@
-# 🤖 Blocos Pybricks — Missões
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blocos Pybricks — Missões</title>
+<style>
+:root{--bg:#f1f3f9;--pn:#fff;--tx:#1f2430;--mut:#6b7285;--bd:#d6dae6;--ac:#4c6fff;--mov:#4c97ff;--anx:#ff8c1a;--ctl:#e6a000;--sen:#3fae3f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161c;--pn:#1e212b;--tx:#e8eaf2;--mut:#9aa1b5;--bd:#343848}}
+:root[data-theme="dark"]{--bg:#14161c;--pn:#1e212b;--tx:#e8eaf2;--mut:#9aa1b5;--bd:#343848}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--pn)}
+header h1{margin:0;font-size:17px}header p{margin:2px 0 0;color:var(--mut);font-size:12px}
+main{display:grid;grid-template-columns:230px 1fr 340px;gap:12px;padding:12px;min-height:calc(100vh - 70px)}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.panel{background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:10px;min-width:0}
+h2{margin:8px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.blk{color:#fff;border-radius:8px;padding:6px 8px;margin:4px 0;position:relative;user-select:none}
+.blk.mov{background:var(--mov)}.blk.anx{background:var(--anx)}.blk.ctl{background:var(--ctl)}.blk.sen{background:var(--sen)}
+.blk.snd{background:#9966ff}.blk.lgc{background:#59c059}.blk.fll{background:#e0507a}
+.pal{cursor:pointer;font-size:13px}.pal:hover{filter:brightness(1.08)}
+.pal b{background:rgba(255,255,255,.28);border-radius:10px;padding:0 6px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding-right:20px}
+.row input,.row select{width:62px;border:0;border-radius:10px;padding:2px 6px;font:inherit;color:#1f2430;background:#fff}
+.row select{width:auto;max-width:150px}
+.del{position:absolute;top:4px;right:6px;border:0;background:none;color:#fff;font-size:16px;line-height:1;cursor:pointer;opacity:.8}
+.stack{min-height:38px;border:2px dashed transparent;border-radius:8px;padding:2px}
+.stack.hl{border-color:var(--ac);background:rgba(76,111,255,.08)}
+.ws>.stack{min-height:300px}
+.blk>.stack{margin:6px 0 0 14px;background:rgba(0,0,0,.12);border-color:rgba(255,255,255,.35)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.tabs button,.btns button{border:1px solid var(--bd);background:var(--pn);color:var(--tx);border-radius:8px;padding:6px 10px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.hint{color:var(--mut);font-size:12px;padding:6px}
+textarea{width:100%;height:420px;resize:vertical;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:8px}
+.btns{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.pal-s{width:100%;margin:6px 0;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+details{margin:2px 0}
+summary{cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);padding:6px 2px}
+</style>
+</head>
+<body>
+<header><h1>🤖 Blocos Pybricks — Missões</h1><p>Arraste (ou clique) os blocos para montar cada missão. O código Python é gerado ao lado.</p></header>
+<main>
+<section class="panel" id="pal"></section>
+<section class="panel ws"><div class="tabs" id="tabs"></div><div id="ws"></div></section>
+<section class="panel">
+<h2>Código das missões</h2>
+<textarea id="code" readonly spellcheck="false"></textarea>
+<div class="btns"><button id="copy">Copiar código</button><button id="clr">Limpar missão</button></div>
+<p class="hint">Cole no lugar das funções <code>missao_1</code> a <code>missao_6</code> do seu main.py (o resto do código continua igual).</p>
+</section>
+<section class="panel" style="grid-column:1/-1"><h2>Funções extras — cole uma vez no main.py, antes das missões</h2><textarea id="ext" readonly spellcheck="false" style="height:260px"></textarea><div class="btns"><button id="copy2">Copiar extras</button></div><p class="hint">Os blocos novos usam estes nomes de objetos: <code>hub, robot, left, right, C, D, cor1, cor2, dist, forca</code>. Se no seu main.py forem outros, renomeie lá ou troque nas funções.</p></section>
+</main>
+<script>
+// ---- Definição dos blocos (cada um vira uma chamada das suas funções) ----
+const D={
+andar:{k:'mov',t:['andar',{d:20},'cm  vel',{d:400}],py:a=>`drive_cm(${a[0]}, ${a[1]})`},
+girar:{k:'mov',t:['girar',{d:90},'° (− = esquerda)'],py:a=>`turn_degrees(${a[0]})`},
+zerarh:{k:'mov',t:['zerar direção em',{d:0},'°'],py:a=>`reset_heading(${a[0]})`},
+pararr:{k:'mov',t:['parar robô'],py:()=>'stop_robot()'},
+anexos:{k:'anx',t:['anexos C',{d:0},'° vel',{d:500},' D',{d:0},'° vel',{d:500}],py:a=>`anexos(${a[0]}, ${a[2]}, ${a[1]}, ${a[3]})`},
+anexo:{k:'anx',t:['motor',{s:['C','D']},'girar',{d:360},'° vel',{d:500}],py:a=>`anexo(${a[0]}, ${a[1]}, ${a[2]})`},
+irpara:{k:'anx',t:['ir para C',{d:0},'° D',{d:0},'° vel',{d:500}],py:a=>`ir_para_dois(${a[0]}, ${a[1]}, ${a[2]}, ${a[2]})`},
+calib:{k:'anx',t:['calibrar anexos no batente'],py:()=>'calibrar_anexos()'},
+paranx:{k:'anx',t:['parar anexos'],py:()=>'parar()'},
+esperar:{k:'ctl',t:['esperar',{d:500},'ms'],py:a=>`wait(${a[0]})`},
+repetir:{k:'ctl',rep:1,t:['repetir',{d:2},'vezes'],py:null},
+bateria:{k:'sen',t:['verificar bateria'],py:()=>'verificar_bateria()'}
+};
+const GRP=[['Movimento',['andar','girar','zerarh','pararr']],['Anexos (C e D)',['anexos','anexo','irpara','calib','paranx']],['Controle',['esperar','repetir']],['Sensores',['bateria']]];
+const COR='{Vermelho:Color.RED/Verde:Color.GREEN/Azul:Color.BLUE/Amarelo:Color.YELLOW/Branco:Color.WHITE/Preto:Color.BLACK/Laranja:Color.ORANGE/Nenhuma:Color.NONE}',
+S='{cor1/cor2}',MT='{C/D}',V='{contador/estado/valor/n}',SN='{Sim:True/Não:False}',
+OP='{menor que:</maior que:>}',CMP='{==/!=/</>/<=/>=}',
+BTN='{Esquerdo:Button.LEFT/Direito:Button.RIGHT/Bluetooth:Button.BLUETOOTH/Centro:Button.CENTER}',
+NOTA='{C4/D4/E4/F4/G4/A4/B4/C5}',
+ICO='{Feliz:Icon.HAPPY/Triste:Icon.SAD/Coração:Icon.HEART/Certo:Icon.TRUE/Errado:Icon.FALSE/Cima:Icon.UP/Baixo:Icon.DOWN/Esquerda:Icon.LEFT/Direita:Icon.RIGHT}',
+LADO='{borda esq.:-1/borda dir.:1}';
+// linha: tipo|id|texto com {número} ou {opção:valor/opção2:valor2}|python com $0,$1…  (tipo com + = bloco que contém outros)
+function P(s){let g;s.trim().split('\n').forEach(l=>{
+ if(l[0]=='#'){GRP.push(g=[l.slice(1),[]]);return}
+ let[k,id,lb,py]=l.split('|');const c=k[0]=='+';if(c)k=k.slice(1);
+ const t=[];
+ lb.split(/\{([^}]*)\}/).forEach((x,i)=>{
+  if(i%2==0){if(x)t.push(x)}
+  else if(/^-?[\d.]+$/.test(x))t.push({d:+x});
+  else{const o=x.split('/').map(v=>v.split(':'));t.push({s:o.map(v=>v[v.length-1]),l:o.map(v=>v[0])})}});
+ D[id]={k,t,py:a=>py.replace(/\$(\d)/g,(_,i)=>a[i]),rep:c?1:0,hd:c};
+ g[1].push(id)})}
+P(`
+#Movimento+
+mov|reto|andar reto {200} mm|robot.straight($0)
+mov|re|andar de ré {200} mm|robot.straight(-$0)
+mov|rodarT|andar por {1000} ms vel {200}|robot.drive($1,0); wait($0); robot.brake()
+mov|giro|girar robô {90}° (relativo)|robot.turn($0)
+mov|giroabs|virar para direção {0}° (giroscópio)|robot.turn(($0-hub.imu.heading()+180)%360-180)
+mov|curva|curva raio {150} mm ângulo {90}°|robot.curve($0,$1)
+mov|pivoe|pivô: só roda esquerda {90}°|left.run_angle(300,$0)
+mov|pivod|pivô: só roda direita {90}°|right.run_angle(300,$0)
+mov|rodar|rodar: vel {200} mm/s giro {0} °/s|robot.drive($0,$1)
+mov|brake|travar robô (freio)|robot.brake()
+mov|coast|soltar rodas|robot.stop()
+mov|vreta|vel. reta {500} mm/s aceleração {1000}|robot.settings(straight_speed=$0,straight_acceleration=$1)
+mov|vgiro|vel. giro {200} °/s aceleração {600}|robot.settings(turn_rate=$0,turn_acceleration=$1)
+mov|usagyro|giroscópio nas rodas ${SN}|robot.use_gyro($0)
+mov|zerar|zerar distância e ângulo do robô|robot.reset()
+#Andar até…
+mov|ateCor|andar até cor ${COR} no ${S} vel {200}|ate(lambda: $1.color()==$0, $2)
+mov|ateRef|andar até refletida do ${S} ${OP} {30} vel {200}|ate(lambda: $0.reflection() $1 $2, $3)
+mov|ateDist|andar até distância ${OP} {100} mm vel {200}|ate(lambda: dist.distance() $0 $1, $2)
+mov|ateForca|andar até apertar o sensor de força vel {200}|ate(lambda: forca.pressed(), $0)
+mov|ateTrava|andar até travar na parede vel {200}|ate(lambda: robot.stalled(), $0)
+mov|reTrava|ré até travar na parede vel {200}|ate(lambda: robot.stalled(), -$0)
+#Anexos+
+anx|mPar|motor ${MT} girar {90}° vel {500} SEM esperar|$0.run_angle($2,$1,Stop.HOLD,False)
+anx|mAlvo|motor ${MT} ir ao ângulo {90}° vel {500}|$0.run_target($2,$1)
+anx|mAlvoP|motor ${MT} ir ao ângulo {90}° vel {500} SEM esperar|$0.run_target($2,$1,Stop.HOLD,False)
+anx|mTempo|motor ${MT} vel {500} por {1000} ms|$0.run_time($1,$2)
+anx|mRun|ligar motor ${MT} contínuo vel {500}|$0.run($1)
+anx|mDc|motor ${MT} potência {50}%|$0.dc($1)
+anx|mStop|motor ${MT} soltar|$0.stop()
+anx|mBrake|motor ${MT} frear|$0.brake()
+anx|mHold|motor ${MT} segurar posição|$0.hold()
+anx|mBat|motor ${MT} até o batente e zerar vel {-300} força {40}%|batente($0,$1,$2)
+anx|mZero|motor ${MT} ângulo atual vira {0}°|$0.reset_angle($1)
+anx|mVel|motor ${MT} limitar vel. a {800} °/s|$0.control.limits(speed=$1)
+anx|mAcel|motor ${MT} aceleração {2000} °/s²|$0.control.limits(acceleration=$1)
+anx|mSacode|motor ${MT} sacudir {3} vezes {30}° vel {800}|for _ in range($1): $0.run_angle($3,$2); $0.run_angle($3,-$2)
+anx|mEsp|esperar motor ${MT} terminar|while not $0.done(): wait(5)
+anx|mTrav|esperar motor ${MT} travar|while not $0.stalled(): wait(5)
+#FLL / Partida
+fll|seguir|seguir linha {500} mm vel {150} ganho {1.5} sensor ${S} ${LADO}|seguir($0,$1,$2,$3,$4)
+fll|seguirAte|seguir linha até cor ${COR} lida no ${S} vel {150} ganho {1.5} guia ${S} ${LADO}|seguir(99999,$2,$3,$4,$5,lambda: $1.color()==$0)
+fll|alinhar|alinhar nas 2 linhas pretas vel {150} limite {30}|alinhar_linha($0,$1)
+fll|parede|encostar na parede de ré {800} ms vel {200}|parede($0,$1)
+fll|paredeF|encostar na parede de frente {800} ms vel {200}|parede($0,-$1)
+fll|largada|largada: bipes 3-2-1 e iniciar cronômetro|largada()
+fll|cronz|zerar cronômetro da partida|cron.reset()
+fll|cronEsp|esperar cronômetro chegar a {150} s|while cron.time()<$0*1000: wait(10)
+fll|fim|fim: bipe longo e parar tudo|hub.speaker.beep(880,800); robot.stop(); C.stop(); D.stop()
+fll|stopBtn|botão de parar o programa: ${BTN}|hub.system.set_stop_button($0)
+fll|stopOff|desativar botão de parar|hub.system.set_stop_button(None)
+#Lógica e laços
++ctl|seCor|se cor ${COR} no ${S}|if $1.color()==$0
++ctl|seRef|se refletida do ${S} ${OP} {50}|if $0.reflection() $1 $2
++ctl|seDist|se distância ${OP} {200} mm|if dist.distance() $0 $1
++ctl|seBtn|se botão ${BTN} apertado|if $0 in hub.buttons.pressed()
++ctl|seForca|se sensor de força apertado|if forca.pressed()
++ctl|seBat|se bateria menor que {7500} mV|if hub.battery.voltage()<$0
++ctl|seVar|se ${V} ${CMP} {1}|if $0 $1 $2
++ctl|seTempo|se faltam menos de {20} s na partida|if 150000-cron.time()<$0*1000
++ctl|senaoCor|senão se cor ${COR} no ${S}|elif $1.color()==$0
++ctl|senao|senão|else
++ctl|enqRef|enquanto refletida do ${S} ${OP} {50}|while $0.reflection() $1 $2
++ctl|enqDist|enquanto distância ${OP} {200} mm|while dist.distance() $0 $1
++ctl|enqAnd|enquanto robô andou menos de {500} mm|while abs(robot.distance())<$0
++ctl|enqVar|enquanto ${V} ${CMP} {5}|while $0 $1 $2
++ctl|sempre|repetir para sempre|while True
++ctl|ateCorR|repetir até cor ${COR} no ${S}|while $1.color()!=$0
++ctl|ateBtn|repetir até botão ${BTN}|while $0 not in hub.buttons.pressed()
+ctl|quebra|parar repetição (break)|break
+ctl|prox|pular para a próxima volta|continue
+ctl|retorna|encerrar esta missão (return)|return
+ctl|segs|esperar {1} segundo(s)|wait(int($0*1000))
+ctl|sai|parar o programa|raise SystemExit
+#Esperar sensor
+sen|eCor|esperar cor ${COR} no ${S}|while $1.color()!=$0: wait(10)
+sen|eRef|esperar refletida do ${S} ${OP} {30}|while not ($0.reflection() $1 $2): wait(10)
+sen|eDist|esperar distância ${OP} {100} mm|while not (dist.distance() $0 $1): wait(10)
+sen|eForca|esperar apertar o sensor de força|while not forca.pressed(): wait(10)
+sen|eGiro|esperar giroscópio chegar a {90}°|while abs(hub.imu.heading()-$0)>2: wait(5)
+sen|eBtn|esperar apertar botão ${BTN}|while $0 not in hub.buttons.pressed(): wait(10)
+sen|eSolta|esperar soltar os botões|while hub.buttons.pressed(): wait(10)
+sen|eTilt|esperar inclinar o robô mais de {10}°|while abs(hub.imu.tilt()[0])<$0: wait(10)
+sen|eDistR|esperar robô andar {500} mm|while abs(robot.distance())<$0: wait(5)
+#Ler / imprimir
+sen|pGiro|imprimir direção do giroscópio|print(hub.imu.heading())
+sen|pRef|imprimir refletida do ${S}|print($0.reflection())
+sen|pCor|imprimir cor do ${S}|print($0.color())
+sen|pDist|imprimir distância (mm)|print(dist.distance())
+sen|pAng|imprimir ângulo do motor ${MT}|print($0.angle())
+sen|pBat|imprimir tensão da bateria|print(hub.battery.voltage())
+sen|pTempo|imprimir cronômetro (ms)|print(cron.time())
+sen|pRobo|imprimir distância andada (mm)|print(robot.distance())
+sen|luzOn|luz do ${S} ligada em {100}%|$0.lights.on($1)
+sen|luzOff|apagar luz do ${S}|$0.lights.off()
+#Variáveis
+lgc|vSet|${V} = {0}|$0 = $1
+lgc|vAdd|somar {1} em ${V}|$1 += $0
+lgc|vRef|${V} = refletida do ${S}|$0 = $1.reflection()
+lgc|vDist|${V} = distância (ultrassônico)|$0 = dist.distance()
+lgc|vGiro|${V} = direção do giroscópio|$0 = hub.imu.heading()
+lgc|vTempo|${V} = cronômetro (ms)|$0 = cron.time()
+lgc|vAng|${V} = ângulo do motor ${MT}|$0 = $1.angle()
+lgc|vPrint|imprimir ${V}|print($0)
+#Hub: luz, som, tela
+snd|luz|luz do hub ${COR}|hub.light.on($0)
+snd|luzOff2|apagar luz do hub|hub.light.off()
+snd|pisca|piscar luz do hub ${COR}|hub.light.blink($0,[300,300])
+snd|bipe|bipe {500} Hz por {200} ms|hub.speaker.beep($0,$1)
+snd|bipes|bipar {3} vezes|for _ in range($0): hub.speaker.beep(800,150); wait(150)
+snd|vol|volume {50}%|hub.speaker.volume($0)
+snd|nota|tocar nota ${NOTA} duração 1/{4}|hub.speaker.play_notes(["$0/$1"])
+snd|num|mostrar número {1} no display|hub.display.number($0)
+snd|icone|mostrar ícone ${ICO}|hub.display.icon($0)
+snd|dOff|limpar display|hub.display.off()
+snd|pixel|pixel linha {2} coluna {2} brilho {100}|hub.display.pixel($0,$1,$2)
+snd|desliga|desligar o hub|hub.system.shutdown()
+`);
+const EXT=`# ===== EXTRAS dos blocos novos — cole UMA vez no main.py, antes das missões =====
+from pybricks.parameters import Color, Button, Icon, Stop
+from pybricks.tools import StopWatch, wait
+# Crie os sensores que usar (ajuste as portas):
+# cor1 = ColorSensor(Port.E); cor2 = ColorSensor(Port.F)
+# dist = UltrasonicSensor(Port.F); forca = ForceSensor(Port.F)
+cron = StopWatch()
 
-Arraste (ou clique) os blocos para montar cada missão. O código Python é gerado ao lado.
+def ate(cond, v=200):  # anda até a condição (lambda) ficar verdadeira
+    robot.drive(v, 0)
+    while not cond(): wait(5)
+    robot.brake()
 
-## Código das missões
+def seguir(mm, v, kp, s, lado, fim=None):  # seguir linha (P) por mm ou até fim()
+    robot.reset()
+    while robot.distance() < mm and not (fim and fim()):
+        robot.drive(v, lado * kp * (s.reflection() - 50))
+    robot.brake()
 
-Cole no lugar das funções `missao_1` a `missao_6` do seu main.py (o resto do código continua igual).
+def alinhar_linha(v=150, lim=30):  # cor1 e cor2 param cada roda ao ver a linha preta
+    robot.stop(); left.run(v); right.run(v); e = d = False
+    while not (e and d):
+        if not e and cor1.reflection() < lim: left.brake(); e = True
+        if not d and cor2.reflection() < lim: right.brake(); d = True
+        wait(5)
 
-## Funções extras — cole uma vez no main.py, antes das missões
+def parede(ms, v=200):  # encosta na parede (v>0 = ré)
+    robot.drive(-v, 0); wait(ms); robot.brake()
 
-Os blocos novos usam estes nomes de objetos: `hub, robot, left, right, C, D, cor1, cor2, dist, forca`. Se no seu main.py forem outros, renomeie lá ou troque nas funções.
+def batente(m, v=-300, lim=40):  # vai até o batente e zera o ângulo
+    m.run_until_stalled(v, duty_limit=lim); m.reset_angle(0)
+
+def largada():
+    for _ in range(3): hub.speaker.beep(500, 150); wait(850)
+    hub.speaker.beep(1000, 500); cron.reset()
+`;
+
+const KEY='pybricks-blocos-v1';
+let M=load(),cur=0,drag=null;
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(s)&&s.length==6)return s}catch(e){}return[[],[],[],[],[],[]]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}}
+const $=id=>document.getElementById(id);
+function make(t){const d=D[t],a=[];d.t.forEach(x=>{if(typeof x!='string')a.push(x.s?x.s[0]:x.d)});return{t,a,c:d.rep?[]:undefined}}
+const inside=(b,l)=>b.c&&(b.c===l||b.c.some(x=>inside(x,l)));
+// ---- Geração do código Python ----
+function gen(list,ind){
+ if(!list.length)return ind+'pass\n';
+ return list.map(b=>{const d=D[b.t];
+  if(d.hd)return ind+d.py(b.a)+':\n'+gen(b.c,ind+'    ');
+  if(d.rep)return ind+`for _ in range(${b.a[0]}):\n`+gen(b.c,ind+'    ');
+  return ind+d.py(b.a)+'\n'}).join('');
+}
+function upd(){save();$('code').value=M.map((l,i)=>`def missao_${i+1}():\n`+gen(l,'    ')).join('\n\n')}
+// ---- Interface ----
+function clearHL(){document.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'))}
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function stack(list){
+ const s=el('div','stack');
+ s.ondragover=ev=>{ev.preventDefault();ev.stopPropagation();clearHL();s.classList.add('hl')};
+ s.ondrop=ev=>{
+  ev.preventDefault();ev.stopPropagation();
+  if(!drag)return;
+  const kids=[...s.children].filter(c=>c.classList.contains('blk'));
+  let idx=kids.length;
+  for(let i=0;i<kids.length;i++){const r=kids[i].getBoundingClientRect();if(ev.clientY<r.top+r.height/2){idx=i;break}}
+  let b;
+  if(drag.n)b=make(drag.n);
+  else{b=drag.b;if(inside(b,list))return;
+   const oi=drag.list.indexOf(b);drag.list.splice(oi,1);
+   if(drag.list===list&&oi<idx)idx--}
+  list.splice(idx,0,b);drag=null;render()};
+ list.forEach(b=>s.append(blk(b,list)));
+ return s;
+}
+function blk(b,list){
+ const d=D[b.t],e=el('div','blk '+d.k),row=el('div','row');
+ e.draggable=true;
+ e.ondragstart=ev=>{ev.stopPropagation();drag={b,list};ev.dataTransfer.setData('text/plain','b')};
+ e.ondragend=()=>{drag=null;clearHL()};
+ let i=0;
+ d.t.forEach(tk=>{
+  if(typeof tk=='string'){row.append(el('span',null,tk));return}
+  const idx=i++;let inp;
+  if(tk.s){inp=el('select');tk.s.forEach((o,j)=>inp.add(new Option(tk.l?tk.l[j]:o,o)));inp.value=b.a[idx]}
+  else{inp=el('input');inp.type='number';inp.step='any';inp.value=b.a[idx]}
+  inp.oninput=inp.onchange=()=>{b.a[idx]=tk.s?inp.value:(parseFloat(inp.value)||0);upd()};
+  row.append(inp)});
+ const x=el('button','del','×');x.title='Remover';
+ x.onclick=()=>{list.splice(list.indexOf(b),1);render()};
+ e.append(row,x);
+ if(d.rep)e.append(stack(b.c));
+ return e;
+}
+function palette(){
+ const p=$('pal');p.innerHTML='';
+ const q=el('input','pal-s');q.placeholder='🔎 buscar bloco…';
+ q.oninput=()=>{const v=q.value.toLowerCase().trim();p.querySelectorAll('details').forEach(d=>{let n=0;d.querySelectorAll('.pal').forEach(e=>{const m=!v||e.dataset.q.includes(v);e.style.display=m?'':'none';n+=m});d.style.display=n?'':'none';if(v)d.open=n>0})};
+ p.append(q);
+ GRP.forEach(([g,ts])=>{
+  const dt=el('details');dt.open=g=='Movimento';dt.append(el('summary',null,g+' ('+ts.length+')'));p.append(dt);
+  ts.forEach(t=>{
+   const d=D[t],e=el('div','blk pal '+d.k);e.draggable=true;
+   d.t.forEach(tk=>e.append(typeof tk=='string'?document.createTextNode(tk+' '):el('b',null,tk.s?(tk.l||tk.s)[0]:tk.d)));
+   e.ondragstart=ev=>{drag={n:t};ev.dataTransfer.setData('text/plain','n')};
+   e.ondragend=()=>{drag=null;clearHL()};
+   e.onclick=()=>{M[cur].push(make(t));render()};
+   e.dataset.q=e.textContent.toLowerCase();dt.append(e)})});
+}
+function render(){
+ const tb=$('tabs');tb.innerHTML='';
+ M.forEach((_,i)=>{const b=el('button',i==cur?'on':'','Missão '+(i+1));b.onclick=()=>{cur=i;render()};tb.append(b)});
+ const w=$('ws');w.innerHTML='';
+ w.append(stack(M[cur]));
+ if(!M[cur].length)w.append(el('p','hint','Arraste blocos para cá ou clique neles na lista ao lado.'));
+ upd();
+}
+$('copy').onclick=()=>{
+ const t=$('code'),b=$('copy');
+ const ok=()=>{b.textContent='Copiado ✓';setTimeout(()=>b.textContent='Copiar código',1500)};
+ try{navigator.clipboard.writeText(t.value).then(ok,()=>{t.select();document.execCommand('copy');ok()})}
+ catch(e){t.select();try{document.execCommand('copy');ok()}catch(_){}}
+};
+let armed=0;
+$('clr').onclick=()=>{
+ const b=$('clr');
+ if(!armed){armed=1;b.textContent='Confirmar?';setTimeout(()=>{armed=0;b.textContent='Limpar missão'},2500);return}
+ armed=0;b.textContent='Limpar missão';M[cur]=[];render();
+};
+$('ext').value=EXT;
+$('copy2').onclick=()=>{
+ const t=$('ext'),b=$('copy2');
+ const ok=()=>{b.textContent='Copiado ✓';setTimeout(()=>b.textContent='Copiar extras',1500)};
+ try{navigator.clipboard.writeText(t.value).then(ok,()=>{t.select();document.execCommand('copy');ok()})}
+ catch(e){t.select();try{document.execCommand('copy');ok()}catch(_){}}
+};
+palette();render();
+</script>
+</body>
+</html>
